@@ -1,0 +1,13 @@
+{
+  "no_param_columns_in_features": true,
+  "no_quad_columns_in_features": true,
+  "clean_targets_neutral": true,
+  "clean_is_readable": true,
+  "overall_equals_all_dimensions": true,
+  "severity_index_consistent": true,
+  "severity_index_learned_consistent": true,
+  "overall_learned_equals_dimensions": true,
+  "group_disjoint": true,
+  "all_splits_non_empty": true,
+  "validated": true
+}

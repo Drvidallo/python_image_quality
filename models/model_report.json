@@ -1,0 +1,475 @@
+{
+  "seed": 42,
+  "feature_columns": [
+    "overexposed_pct",
+    "glare_ratio",
+    "blur_var_half",
+    "blur_var_big",
+    "blur_var",
+    "brightness_p95",
+    "tenengrad",
+    "glare_center_dist",
+    "glare_blob_aspect",
+    "brightness_p50",
+    "quality_prior",
+    "log_blur_x_brightness_dev",
+    "brightness_q_ratio",
+    "fft_hf_ratio",
+    "blur_scale_ratio",
+    "glare_sat_mean",
+    "brightness_skew",
+    "brightness_balance",
+    "brightness_kurtosis",
+    "entropy",
+    "brightness_p05",
+    "local_contrast",
+    "brightness_std",
+    "underexposed_pct",
+    "capture_condition_code",
+    "doc_type_id_card",
+    "doc_width_px",
+    "doc_height_px",
+    "aspect_ratio",
+    "aspect_deviation",
+    "est_dpi"
+  ],
+  "rows": {
+    "train": 4356,
+    "val": 696,
+    "test": 1200
+  },
+  "target_recall": {
+    "readable_overall": 0.8,
+    "readable_blur": 0.9,
+    "readable_brightness": 0.85,
+    "readable_glare": 0.9
+  },
+  "thresholds": {
+    "readable_overall": 0.38610519713585323,
+    "readable_blur": 0.5474257577392726,
+    "readable_brightness": 0.3704752623367095,
+    "readable_glare": 0.34061558354865723
+  },
+  "label_definition": {
+    "brightness_label": "exposure_adequacy",
+    "brightness_gamma_range": [
+      0.85,
+      1.2
+    ],
+    "brightness_ev_max": 1.0,
+    "readable_overall_learned": "readable_blur AND readable_brightness AND readable_glare",
+    "review_required": true
+  },
+  "resolution_rule": {
+    "rule": "effective_short_side_px >= min_effective_short_side_px",
+    "min_effective_short_side_px": 500,
+    "note": "Deterministic rule; in production apply to the measured warped document short side. Synthetic rows are upscaled back to native size, so this prototype evaluation uses the parameter-derived effective size.",
+    "val": {
+      "n": 696,
+      "positives": 241,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "confusion_matrix": [
+        [
+          455,
+          0
+        ],
+        [
+          0,
+          241
+        ]
+      ],
+      "roc_auc": null,
+      "average_precision": null
+    },
+    "test": {
+      "n": 1200,
+      "positives": 439,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "confusion_matrix": [
+        [
+          761,
+          0
+        ],
+        [
+          0,
+          439
+        ]
+      ],
+      "roc_auc": null,
+      "average_precision": null
+    }
+  },
+  "combined_system": {
+    "description": "learned_overall AND resolution_rule vs 4-dimension readable_overall",
+    "threshold": 0.38610519713585323,
+    "val": {
+      "n": 696,
+      "positives": 79,
+      "accuracy": 0.9597701149425287,
+      "precision": 0.7741935483870968,
+      "recall": 0.9113924050632911,
+      "f1": 0.8372093023255814,
+      "confusion_matrix": [
+        [
+          596,
+          21
+        ],
+        [
+          7,
+          72
+        ]
+      ],
+      "roc_auc": null,
+      "average_precision": null
+    },
+    "test": {
+      "n": 1200,
+      "positives": 126,
+      "accuracy": 0.9591666666666666,
+      "precision": 0.7692307692307693,
+      "recall": 0.873015873015873,
+      "f1": 0.8178438661710037,
+      "confusion_matrix": [
+        [
+          1041,
+          33
+        ],
+        [
+          16,
+          110
+        ]
+      ],
+      "roc_auc": null,
+      "average_precision": null
+    }
+  },
+  "classification": {
+    "readable_overall": {
+      "model_file": "clf_readable_overall.joblib",
+      "label_column": "readable_overall_learned",
+      "threshold": 0.38610519713585323,
+      "val": {
+        "n": 696,
+        "positives": 125,
+        "accuracy": 0.896551724137931,
+        "precision": 0.6778523489932886,
+        "recall": 0.808,
+        "f1": 0.7372262773722628,
+        "confusion_matrix": [
+          [
+            523,
+            48
+          ],
+          [
+            24,
+            101
+          ]
+        ],
+        "roc_auc": 0.9516217162872154,
+        "average_precision": 0.8267938385460163
+      },
+      "test": {
+        "n": 1200,
+        "positives": 191,
+        "accuracy": 0.8966666666666666,
+        "precision": 0.6666666666666666,
+        "recall": 0.7015706806282722,
+        "f1": 0.6836734693877551,
+        "confusion_matrix": [
+          [
+            942,
+            67
+          ],
+          [
+            57,
+            134
+          ]
+        ],
+        "roc_auc": 0.93854783389287,
+        "average_precision": 0.8172429908958422
+      }
+    },
+    "readable_blur": {
+      "model_file": "clf_readable_blur.joblib",
+      "label_column": "readable_blur",
+      "threshold": 0.5474257577392726,
+      "val": {
+        "n": 696,
+        "positives": 328,
+        "accuracy": 0.8850574712643678,
+        "precision": 0.8542857142857143,
+        "recall": 0.9115853658536586,
+        "f1": 0.8820058997050148,
+        "confusion_matrix": [
+          [
+            317,
+            51
+          ],
+          [
+            29,
+            299
+          ]
+        ],
+        "roc_auc": 0.9513106442205727,
+        "average_precision": 0.9472123395339317
+      },
+      "test": {
+        "n": 1200,
+        "positives": 538,
+        "accuracy": 0.8458333333333333,
+        "precision": 0.8413926499032882,
+        "recall": 0.8085501858736059,
+        "f1": 0.8246445497630331,
+        "confusion_matrix": [
+          [
+            580,
+            82
+          ],
+          [
+            103,
+            435
+          ]
+        ],
+        "roc_auc": 0.9378081514841811,
+        "average_precision": 0.9278538937959373
+      }
+    },
+    "readable_brightness": {
+      "model_file": "clf_readable_brightness.joblib",
+      "label_column": "readable_brightness",
+      "threshold": 0.3704752623367095,
+      "val": {
+        "n": 696,
+        "positives": 358,
+        "accuracy": 0.757183908045977,
+        "precision": 0.7014925373134329,
+        "recall": 0.9189944134078212,
+        "f1": 0.7956469165659008,
+        "confusion_matrix": [
+          [
+            198,
+            140
+          ],
+          [
+            29,
+            329
+          ]
+        ],
+        "roc_auc": 0.8373938051634657,
+        "average_precision": 0.828044150882923
+      },
+      "test": {
+        "n": 1200,
+        "positives": 571,
+        "accuracy": 0.7,
+        "precision": 0.6475524475524476,
+        "recall": 0.8108581436077058,
+        "f1": 0.7200622083981337,
+        "confusion_matrix": [
+          [
+            377,
+            252
+          ],
+          [
+            108,
+            463
+          ]
+        ],
+        "roc_auc": 0.790997858887011,
+        "average_precision": 0.7723515062166295
+      }
+    },
+    "readable_glare": {
+      "model_file": "clf_readable_glare.joblib",
+      "label_column": "readable_glare",
+      "threshold": 0.34061558354865723,
+      "val": {
+        "n": 696,
+        "positives": 400,
+        "accuracy": 0.875,
+        "precision": 0.8789346246973365,
+        "recall": 0.9075,
+        "f1": 0.8929889298892989,
+        "confusion_matrix": [
+          [
+            246,
+            50
+          ],
+          [
+            37,
+            363
+          ]
+        ],
+        "roc_auc": 0.9603293918918918,
+        "average_precision": 0.9725665611453697
+      },
+      "test": {
+        "n": 1200,
+        "positives": 646,
+        "accuracy": 0.85,
+        "precision": 0.8236111111111111,
+        "recall": 0.9179566563467493,
+        "f1": 0.8682284040995608,
+        "confusion_matrix": [
+          [
+            427,
+            127
+          ],
+          [
+            53,
+            593
+          ]
+        ],
+        "roc_auc": 0.9478182874898011,
+        "average_precision": 0.9576566997466476
+      }
+    }
+  },
+  "regression": {
+    "blur_severity": {
+      "model_file": "reg_blur_severity.joblib",
+      "label_column": "blur_severity",
+      "val": {
+        "n": 696,
+        "mae": 0.14877474279753564,
+        "rmse": 0.20762644578322795,
+        "r2": 0.7061097467258712
+      },
+      "test": {
+        "n": 1200,
+        "mae": 0.17184939395578358,
+        "rmse": 0.23300447701073604,
+        "r2": 0.6412667296666076
+      }
+    },
+    "brightness_severity": {
+      "model_file": "reg_brightness_severity.joblib",
+      "label_column": "brightness_severity",
+      "val": {
+        "n": 696,
+        "mae": 0.14316561634534306,
+        "rmse": 0.20277835604350947,
+        "r2": 0.6139321515252198
+      },
+      "test": {
+        "n": 1200,
+        "mae": 0.15282855987924088,
+        "rmse": 0.21157007464244112,
+        "r2": 0.5708771695136392
+      }
+    },
+    "glare_severity": {
+      "model_file": "reg_glare_severity.joblib",
+      "label_column": "glare_severity",
+      "val": {
+        "n": 696,
+        "mae": 0.11223841439562936,
+        "rmse": 0.20612839414334558,
+        "r2": 0.6972547980352021
+      },
+      "test": {
+        "n": 1200,
+        "mae": 0.1238140315509339,
+        "rmse": 0.21819927855844362,
+        "r2": 0.6557073899509169
+      }
+    },
+    "severity_index": {
+      "model_file": "reg_severity_index.joblib",
+      "label_column": "severity_index_learned",
+      "val": {
+        "n": 696,
+        "mae": 0.09467196777641661,
+        "rmse": 0.12800064234110944,
+        "r2": 0.7410134106984821
+      },
+      "test": {
+        "n": 1200,
+        "mae": 0.09728520108162758,
+        "rmse": 0.12894258027757455,
+        "r2": 0.7336500815306204
+      }
+    }
+  },
+  "permutation_importance": {
+    "readable_overall": {
+      "overexposed_pct": 0.04328686514886164,
+      "glare_ratio": 0.0012525394045533656,
+      "blur_var_half": 0.009628021015761812,
+      "blur_var_big": 0.003595096322241642,
+      "blur_var": 0.004511383537653235,
+      "brightness_p95": 0.011889316987740761,
+      "tenengrad": 0.018322942206654935,
+      "glare_center_dist": 0.002734851138353678,
+      "glare_blob_aspect": 0.0007257443082311577,
+      "brightness_p50": 0.002199649737302889,
+      "quality_prior": 0.002479859894921099,
+      "log_blur_x_brightness_dev": -0.00033625218914188346,
+      "brightness_q_ratio": 0.00035866900175125506,
+      "fft_hf_ratio": 0.010586339754816088,
+      "blur_scale_ratio": 0.02614360770577928,
+      "glare_sat_mean": 0.0010423817863397078,
+      "brightness_skew": 0.002076357267950901,
+      "brightness_balance": 0.0016588441330997795,
+      "brightness_kurtosis": 0.0002690017513134801,
+      "entropy": 0.006223467600700539,
+      "brightness_p05": 0.002925394045534091,
+      "local_contrast": 0.004536602451838845,
+      "brightness_std": -0.00015131348511385757,
+      "underexposed_pct": 0.0004707530647985347,
+      "capture_condition_code": -6.164623467606046e-05,
+      "doc_type_id_card": -8.406304728580948e-06,
+      "doc_width_px": 0.0006809106830121924,
+      "doc_height_px": 0.0005408056042030873,
+      "aspect_ratio": 0.0006024518388791034,
+      "aspect_deviation": -8.686514886169228e-05,
+      "est_dpi": 0.00044553415061294733
+    },
+    "severity_index": {
+      "overexposed_pct": 0.0354577127683582,
+      "glare_ratio": 0.0063123339059294545,
+      "blur_var_half": 0.0061390262501446104,
+      "blur_var_big": 0.002376737488394215,
+      "blur_var": 0.03553348315736501,
+      "brightness_p95": 0.0018215462624807028,
+      "tenengrad": 0.04266930223699191,
+      "glare_center_dist": 0.003351491438572121,
+      "glare_blob_aspect": 0.001235836298198656,
+      "brightness_p50": 0.0017362959592206572,
+      "quality_prior": 0.009855365191561207,
+      "log_blur_x_brightness_dev": 0.00112427853104774,
+      "brightness_q_ratio": 0.0013244958457419632,
+      "fft_hf_ratio": 0.009008909524065033,
+      "blur_scale_ratio": 0.001748745735689844,
+      "glare_sat_mean": 0.0014549593766940982,
+      "brightness_skew": 0.0036674101277964417,
+      "brightness_balance": 0.0008240166954192829,
+      "brightness_kurtosis": 0.00027151585602176455,
+      "entropy": 0.0011240489387845192,
+      "brightness_p05": 0.0012585176681813664,
+      "local_contrast": 0.0028717558182188795,
+      "brightness_std": 0.002166840485179364,
+      "underexposed_pct": 0.0006724387598185083,
+      "capture_condition_code": 0.00027096058775898655,
+      "doc_type_id_card": 2.618245015259535e-06,
+      "doc_width_px": 0.00017624474774160793,
+      "doc_height_px": 0.0001227854428655778,
+      "aspect_ratio": -0.00024242537151128175,
+      "aspect_deviation": 0.00013472660044495376,
+      "est_dpi": -6.9155781755334e-05
+    }
+  },
+  "plots": [
+    "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\confusion_matrices.png",
+    "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\roc_curves.png",
+    "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\regression_pred_vs_actual.png",
+    "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\permutation_importance.png"
+  ],
+  "models_dir": "C:/Users/My PC/Downloads/midv500/EDA/models"
+}

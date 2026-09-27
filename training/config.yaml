@@ -1,0 +1,64 @@
+seed: 42
+
+paths:
+  midv500_root: "C:/Users/My PC/Downloads/midv500/midv500_data/midv500"
+  processed_dir: "C:/Users/My PC/Downloads/midv500/EDA/data/midv500/processed"
+  plots_dir: "C:/Users/My PC/Downloads/midv500/EDA/training/plots"
+  models_dir: "C:/Users/My PC/Downloads/midv500/EDA/models"
+
+ingest:
+  every_n: 5
+  workers: 8
+  min_quad_area_ratio: 0.05
+  min_edge_px: 50
+  require_doc_types: ["id_card", "passport"]
+  excluded_folders: ["47_usa_bordercrossing", "48_usa_passportcard"]
+  glare_v_threshold: 250
+
+cleaning:
+  near_duplicate_hamming: 4
+  outlier_iqr_k: 3.0
+
+source_gate:
+  min_blur_var: 30.0
+  brightness_range: [50.0, 210.0]
+  max_glare_pct: 3.0
+  min_short_side_px: 400
+
+degradations:
+  max_variants_per_crop: 12
+  blur_sigmas: [0.0, 1.0, 2.0, 4.0, 8.0]
+  motion_lengths: [0.0, 15.0, 35.0]
+  brightness_gammas: [1.0, 0.85, 0.7, 0.55, 1.2, 1.5]
+  brightness_evs: [0.0, -0.5, -1.0, -1.5, 0.5, 1.0]
+  glare_radius_fracs: [0.0, 0.05, 0.09, 0.14]
+  downscale_factors: [1.0, 0.75, 0.5, 0.3, 0.15]
+
+labels:
+  blur_sigma_max: 2.5
+  motion_length_max: 15.0
+  brightness_label: "exposure_adequacy"
+  brightness_gamma_range: [0.85, 1.2]
+  brightness_ev_max: 1.0
+  glare_radius_frac_max: 0.08
+  min_effective_short_side_px: 500
+
+training:
+  resolution_head: "deterministic"
+  target_recall:
+    readable_overall: 0.80
+    readable_blur: 0.90
+    readable_brightness: 0.85
+    readable_glare: 0.90
+
+reduction:
+  corr_threshold: 0.95
+  variance_threshold: 1.0e-6
+  top_k: 12
+
+splits:
+  test_doc_folders: ["05_aze_passport", "10_cze_id", "22_est_id", "28_hun_passport", "37_prt_id", "45_ukr_passport", "50_xpo_id"]
+  val_fraction: 0.15
+
+plots:
+  dpi: 110

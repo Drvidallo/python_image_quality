@@ -1,0 +1,53 @@
+{
+  "clean": {
+    "input_rows": 1980,
+    "dropped_missing_metrics": 0,
+    "dropped_out_of_range": 41,
+    "outlier_flagged": 0,
+    "dropped_near_duplicates": 711,
+    "kept_rows": 1228
+  },
+  "source_gate": {
+    "base_crops": 521,
+    "min_blur_var": 30.0,
+    "brightness_range": [
+      50.0,
+      210.0
+    ],
+    "max_glare_pct": 3.0
+  },
+  "rows": {
+    "clean": 521,
+    "degraded": 5731,
+    "total": 6252
+  },
+  "split": {
+    "test_doc_folders": [
+      "05_aze_passport",
+      "10_cze_id",
+      "22_est_id",
+      "28_hun_passport",
+      "37_prt_id",
+      "45_ukr_passport",
+      "50_xpo_id"
+    ],
+    "rows": {
+      "train": 4356,
+      "test": 1200,
+      "val": 696
+    },
+    "groups": {
+      "train": 153,
+      "val": 27,
+      "test": 46
+    }
+  },
+  "labels": {
+    "readable_blur": 2817,
+    "readable_brightness": 2977,
+    "readable_glare": 3402,
+    "readable_resolution": 2145,
+    "readable_overall": 669,
+    "readable_overall_learned": 1024
+  }
+}

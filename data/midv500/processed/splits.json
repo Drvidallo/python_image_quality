@@ -1,0 +1,34 @@
+{
+  "summary": {
+    "test_doc_folders": [
+      "05_aze_passport",
+      "10_cze_id",
+      "22_est_id",
+      "28_hun_passport",
+      "37_prt_id",
+      "45_ukr_passport",
+      "50_xpo_id"
+    ],
+    "rows": {
+      "train": 4356,
+      "test": 1200,
+      "val": 696
+    },
+    "groups": {
+      "train": 153,
+      "val": 27,
+      "test": 46
+    }
+  },
+  "test_doc_folders": [
+    "05_aze_passport",
+    "10_cze_id",
+    "22_est_id",
+    "28_hun_passport",
+    "37_prt_id",
+    "45_ukr_passport",
+    "50_xpo_id"
+  ],
+  "val_fraction": 0.15,
+  "seed": 42
+}

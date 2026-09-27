@@ -1,0 +1,170 @@
+{
+  "seed": 42,
+  "feature_columns": [
+    "doc_width_px",
+    "doc_height_px",
+    "doc_short_side_px",
+    "doc_area_ratio",
+    "aspect_ratio",
+    "aspect_deviation",
+    "edge_cv",
+    "est_dpi",
+    "blur_var",
+    "blur_var_half",
+    "blur_var_big",
+    "blur_scale_ratio",
+    "tenengrad",
+    "fft_hf_ratio",
+    "brightness_L",
+    "brightness_std",
+    "brightness_p05",
+    "brightness_p50",
+    "brightness_p95",
+    "brightness_q_ratio",
+    "brightness_skew",
+    "brightness_kurtosis",
+    "local_contrast",
+    "overexposed_pct",
+    "underexposed_pct",
+    "entropy",
+    "glare_pct",
+    "glare_blob_pct",
+    "glare_blob_aspect",
+    "glare_center_dist",
+    "glare_sat_mean",
+    "log_glare_blob_pct",
+    "log_doc_area_ratio",
+    "brightness_dev",
+    "brightness_balance",
+    "log_blur_scale_gap",
+    "quality_prior",
+    "log_blur_x_brightness_dev",
+    "glare_ratio",
+    "doc_type_id_card",
+    "doc_type_passport",
+    "capture_condition_code"
+  ],
+  "selected_features": [
+    "overexposed_pct",
+    "glare_ratio",
+    "blur_var_half",
+    "blur_var_big",
+    "blur_var",
+    "brightness_p95",
+    "tenengrad",
+    "glare_center_dist",
+    "glare_blob_aspect",
+    "brightness_p50",
+    "quality_prior",
+    "log_blur_x_brightness_dev",
+    "brightness_q_ratio",
+    "fft_hf_ratio",
+    "blur_scale_ratio",
+    "glare_sat_mean",
+    "brightness_skew",
+    "brightness_balance",
+    "brightness_kurtosis",
+    "entropy",
+    "brightness_p05",
+    "local_contrast",
+    "brightness_std",
+    "underexposed_pct",
+    "capture_condition_code",
+    "doc_type_id_card",
+    "doc_width_px",
+    "doc_height_px",
+    "aspect_ratio",
+    "aspect_deviation",
+    "est_dpi"
+  ],
+  "top_k_features": [
+    "overexposed_pct",
+    "glare_ratio",
+    "blur_var_half",
+    "blur_var_big",
+    "blur_var",
+    "brightness_p95",
+    "tenengrad",
+    "glare_center_dist",
+    "glare_blob_aspect",
+    "brightness_p50",
+    "quality_prior",
+    "log_blur_x_brightness_dev"
+  ],
+  "dropped_low_variance": [],
+  "categorical_columns": [
+    "document_type",
+    "capture_condition"
+  ],
+  "target_columns": [
+    "target_blur_sigma",
+    "target_motion_length",
+    "target_motion_angle",
+    "target_brightness_gamma",
+    "target_brightness_ev",
+    "target_glare_radius_frac",
+    "target_downscale_factor",
+    "effective_short_side_px",
+    "blur_severity",
+    "brightness_severity",
+    "glare_severity",
+    "resolution_severity",
+    "severity_index",
+    "severity_index_learned"
+  ],
+  "label_columns": [
+    "readable_blur",
+    "readable_brightness",
+    "readable_glare",
+    "readable_resolution",
+    "readable_overall",
+    "readable_overall_learned"
+  ],
+  "winsor_bounds": {
+    "target_blur_sigma": [
+      0.0,
+      8.0
+    ],
+    "target_motion_length": [
+      0.0,
+      35.0
+    ],
+    "target_brightness_gamma": [
+      0.55,
+      1.5
+    ],
+    "target_brightness_ev": [
+      -1.5,
+      1.0
+    ],
+    "target_glare_radius_frac": [
+      0.0,
+      0.14
+    ],
+    "target_downscale_factor": [
+      0.15,
+      1.0
+    ],
+    "effective_short_side_px": [
+      78.6,
+      870.0
+    ]
+  },
+  "resolution_head": "deterministic",
+  "resolution_rule": {
+    "metric": "doc_short_side_px",
+    "min_effective_short_side_px": 500,
+    "note": "apply to the measured warped document short side at inference; deterministic, no learned model"
+  },
+  "label_definition": {
+    "brightness_label": "exposure_adequacy",
+    "brightness_gamma_range": [
+      0.85,
+      1.2
+    ],
+    "brightness_ev_max": 1.0,
+    "readable_overall_learned": "readable_blur AND readable_brightness AND readable_glare",
+    "review_required": true
+  },
+  "ts_portable": true
+}

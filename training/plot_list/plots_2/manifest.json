@@ -1,0 +1,134 @@
+[
+  {
+    "group": "raw",
+    "name": "hist_raw_metrics.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\raw\\hist_raw_metrics.png",
+    "status": "ok"
+  },
+  {
+    "group": "raw",
+    "name": "hist_by_doc_type.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\raw\\hist_by_doc_type.png",
+    "status": "ok"
+  },
+  {
+    "group": "raw",
+    "name": "capture_condition_counts.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\raw\\capture_condition_counts.png",
+    "status": "ok"
+  },
+  {
+    "group": "raw",
+    "name": "missingness.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\raw\\missingness.png",
+    "status": "ok"
+  },
+  {
+    "group": "cleaning",
+    "name": "before_after_transforms.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\cleaning\\before_after_transforms.png",
+    "status": "ok"
+  },
+  {
+    "group": "cleaning",
+    "name": "reconciliation.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\cleaning\\reconciliation.png",
+    "status": "ok"
+  },
+  {
+    "group": "targets",
+    "name": "hist_targets.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\targets\\hist_targets.png",
+    "status": "ok"
+  },
+  {
+    "group": "targets",
+    "name": "hist_severities.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\targets\\hist_severities.png",
+    "status": "ok"
+  },
+  {
+    "group": "targets",
+    "name": "feature_vs_target.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\targets\\feature_vs_target.png",
+    "status": "ok"
+  },
+  {
+    "group": "classification",
+    "name": "class_balance.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\classification\\class_balance.png",
+    "status": "ok"
+  },
+  {
+    "group": "classification",
+    "name": "class_balance_by_type.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\classification\\class_balance_by_type.png",
+    "status": "ok"
+  },
+  {
+    "group": "classification",
+    "name": "feature_hist_by_class.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\classification\\feature_hist_by_class.png",
+    "status": "ok"
+  },
+  {
+    "group": "engineering",
+    "name": "correlation_heatmap.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\engineering\\correlation_heatmap.png",
+    "status": "ok"
+  },
+  {
+    "group": "engineering",
+    "name": "mi_ranking.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\engineering\\mi_ranking.png",
+    "status": "ok"
+  },
+  {
+    "group": "engineering",
+    "name": "pca_scatter.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\engineering\\pca_scatter.png",
+    "status": "ok"
+  },
+  {
+    "group": "engineering",
+    "name": "quality_prior_by_class.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\engineering\\quality_prior_by_class.png",
+    "status": "ok"
+  },
+  {
+    "group": "splits",
+    "name": "split_counts.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\splits\\split_counts.png",
+    "status": "ok"
+  },
+  {
+    "group": "splits",
+    "name": "target_dist_by_split.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\splits\\target_dist_by_split.png",
+    "status": "ok"
+  },
+  {
+    "group": "model",
+    "name": "confusion_matrices.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\confusion_matrices.png",
+    "status": "ok"
+  },
+  {
+    "group": "model",
+    "name": "roc_curves.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\roc_curves.png",
+    "status": "ok"
+  },
+  {
+    "group": "model",
+    "name": "regression_pred_vs_actual.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\regression_pred_vs_actual.png",
+    "status": "ok"
+  },
+  {
+    "group": "model",
+    "name": "permutation_importance.png",
+    "path": "C:/Users/My PC/Downloads/midv500/EDA/training/plots\\model\\permutation_importance.png",
+    "status": "ok"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "stage":"ingest",
+  "jobs":1980,
+  "kept":1980,
+  "failures":{
+
+  },
+  "every_n":5,
+  "folders_selected":33
+}
