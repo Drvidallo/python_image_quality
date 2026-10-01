@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ID Quality Checker</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --pass: #22c55e;
+    --fail: #ef4444;
+    --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 14px 20px; border-bottom: 1px solid #334155;
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: 0.4px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    background: var(--panel); border: 1px solid #334155; border-radius: 999px;
+    padding: 4px 12px; font-size: 12px; color: var(--muted);
+  }
+  .chip[data-state="detected"] { color: var(--pass); border-color: var(--pass); }
+  .chip[data-state="held"] { color: var(--warn); border-color: var(--warn); }
+  .chip[data-state="guide"] { color: var(--fail); border-color: var(--fail); }
+  main {
+    display: grid; grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+    gap: 16px; padding: 16px 20px 28px;
+  }
+  .video-wrap { position: relative; }
+  #video {
+    width: 100%; border-radius: 12px; display: block; background: #000;
+    border: 1px solid #334155;
+  }
+  #capture {
+    position: absolute; bottom: 14px; right: 14px;
+    background: #2563eb; color: white; border: 0; border-radius: 8px;
+    padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  #capture:hover { background: #1d4ed8; }
+  #toast {
+    position: absolute; bottom: 64px; right: 14px; background: #0b1220;
+    border: 1px solid #334155; border-radius: 8px; padding: 8px 14px;
+    font-size: 13px; color: var(--text); opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; max-width: 80%;
+  }
+  #toast.show { opacity: 1; }
+  .panel { display: flex; flex-direction: column; gap: 14px; }
+  .overall {
+    text-align: center; font-weight: 700; font-size: 18px; letter-spacing: 1px;
+    border-radius: 12px; padding: 14px; border: 1px solid #334155; background: var(--panel);
+  }
+  .overall.pass { color: var(--pass); border-color: var(--pass); }
+  .overall.fail { color: var(--fail); border-color: var(--fail); }
+  .overall.waiting { color: var(--muted); }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--panel); border: 1px solid #334155; border-radius: 12px; padding: 12px; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); }
+  .badge { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 10px; background: #334155; color: var(--muted); }
+  .badge.pass { background: rgba(34,197,94,0.15); color: var(--pass); }
+  .badge.fail { background: rgba(239,68,68,0.15); color: var(--fail); }
+  .score { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+  .score-value { font-size: 30px; font-weight: 700; }
+  .score-threshold { font-size: 12px; color: var(--muted); }
+  .bar { height: 6px; background: #334155; border-radius: 999px; margin-top: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; width: 0; background: var(--pass); transition: width 0.2s; }
+  .detail { margin-top: 6px; font-size: 11px; color: var(--muted); min-height: 14px; }
+  .sliders, .raw, .warnings {
+    background: var(--panel); border: 1px solid #334155; border-radius: 12px; padding: 12px 14px;
+  }
+  .sliders h2, .raw h2, .warnings h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .sliders label { display: grid; grid-template-columns: 86px 1fr 40px; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 8px; }
+  .sliders input[type="range"] { width: 100%; accent-color: #2563eb; }
+  .sliders output { text-align: right; font-weight: 600; }
+  .slider-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .raw ul, .warnings ul { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+  .raw li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #2b3a52; }
+  .raw li:last-child { border-bottom: 0; }
+  .raw span { color: var(--muted); }
+  .warnings li { color: var(--warn); padding: 2px 0; }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ID Quality Checker</h1>
+  <div class="chips">
+    <span id="chip-detection" class="chip" data-state="starting">starting</span>
+    <span id="chip-fps" class="chip">0 fps</span>
+    <span id="chip-revision" class="chip">rev 0</span>
+    <span id="chip-stabilizing" class="chip">stabilizing</span>
+  </div>
+</header>
+<main>
+  <section class="video-wrap">
+    <img id="video" src="/video" alt="webcam preview">
+    <button id="capture">Capture</button>
+    <div id="toast"></div>
+  </section>
+  <aside class="panel">
+    <div id="overall" class="overall waiting">WAITING FOR SCORE</div>
+    <div class="cards">
+      <div class="card" data-dim="blur">
+        <div class="card-head"><span>Blur</span><span class="badge">&mdash;</span></div>
+        <div class="score"><span class="score-value">&mdash;</span><span class="score-threshold"></span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <div class="detail"></div>
+      </div>
+      <div class="card" data-dim="brightness">
+        <div class="card-head"><span>Lighting</span><span class="badge">&mdash;</span></div>
+        <div class="score"><span class="score-value">&mdash;</span><span class="score-threshold"></span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <div class="detail"></div>
+      </div>
+      <div class="card" data-dim="glare">
+        <div class="card-head"><span>Glare</span><span class="badge">&mdash;</span></div>
+        <div class="score"><span class="score-value">&mdash;</span><span class="score-threshold"></span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <div class="detail"></div>
+      </div>
+      <div class="card" data-dim="resolution">
+        <div class="card-head"><span>Resolution</span><span class="badge">&mdash;</span></div>
+        <div class="score"><span class="score-value">&mdash;</span><span class="score-threshold"></span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <div class="detail"></div>
+      </div>
+    </div>
+    <div class="sliders">
+      <h2>Thresholds</h2>
+      <label>Blur <input type="range" data-dim="blur" min="0" max="100" step="1" value="55"><output>55</output></label>
+      <label>Lighting <input type="range" data-dim="brightness" min="0" max="100" step="1" value="35"><output>35</output></label>
+      <label>Glare <input type="range" data-dim="glare" min="0" max="100" step="1" value="35"><output>35</output></label>
+      <label>Resolution <input type="range" data-dim="resolution" min="0" max="100" step="1" value="50"><output>50</output></label>
+      <div class="slider-note">Each committed change saves to inference_config_1.json and increments the revision.</div>
+    </div>
+    <div class="raw">
+      <h2>Raw context</h2>
+      <ul id="raw-list"></ul>
+    </div>
+    <div class="warnings">
+      <h2>Warnings</h2>
+      <ul id="warnings-list"><li>none</li></ul>
+    </div>
+  </aside>
+</main>
+<script>
+  const DIMS = ["blur", "brightness", "glare", "resolution"];
+  let slidersInitialized = false;
+
+  function setBadge(element, isPass) {
+    element.textContent = isPass ? "PASS" : "FAIL";
+    element.className = "badge " + (isPass ? "pass" : "fail");
+  }
+
+  function toast(message) {
+    const element = document.getElementById("toast");
+    element.textContent = message;
+    element.classList.add("show");
+    clearTimeout(element._timer);
+    element._timer = setTimeout(() => element.classList.remove("show"), 2500);
+  }
+
+  function render(status) {
+    const chipDetection = document.getElementById("chip-detection");
+    chipDetection.textContent = status.detection;
+    chipDetection.dataset.state = status.detection;
+    document.getElementById("chip-fps").textContent = (status.fps || 0) + " fps";
+    document.getElementById("chip-revision").textContent = "rev " + status.revision;
+    document.getElementById("chip-stabilizing").style.display = status.stabilizing ? "" : "none";
+
+    const overall = document.getElementById("overall");
+    if (status.overall_pass === null || status.overall_pass === undefined) {
+      overall.textContent = "WAITING FOR SCORE";
+      overall.className = "overall waiting";
+    } else {
+      overall.textContent = status.overall_pass ? "OVERALL: PASS" : "OVERALL: FAIL";
+      overall.className = "overall " + (status.overall_pass ? "pass" : "fail");
+    }
+
+    for (const dim of DIMS) {
+      const card = document.querySelector('.card[data-dim="' + dim + '"]');
+      const entry = status.dimensions ? status.dimensions[dim] : null;
+      const scoreEl = card.querySelector(".score-value");
+      const thresholdEl = card.querySelector(".score-threshold");
+      const badgeEl = card.querySelector(".badge");
+      const fill = card.querySelector(".bar-fill");
+      if (!entry) {
+        scoreEl.textContent = "\u2014";
+        thresholdEl.textContent = "threshold " + (status.thresholds ? status.thresholds[dim] : "\u2014");
+        badgeEl.textContent = "\u2014";
+        badgeEl.className = "badge";
+        fill.style.width = "0%";
+        continue;
+      }
+      scoreEl.textContent = entry.score.toFixed(1);
+      thresholdEl.textContent = "threshold " + entry.threshold;
+      setBadge(badgeEl, entry.is_pass);
+      fill.style.width = Math.max(0, Math.min(100, entry.score)) + "%";
+      fill.style.background = entry.is_pass ? "var(--pass)" : "var(--fail)";
+      if (dim === "resolution") {
+        card.querySelector(".detail").textContent = entry.short_side_px
+          ? "short side " + entry.short_side_px + " px" + (entry.est_dpi ? " \u00b7 " + entry.est_dpi + " dpi" : "")
+          : "";
+      }
+    }
+
+    const raw = status.raw || {};
+    const rawRows = [
+      ["Brightness L", raw.brightness_L],
+      ["Overexposed %", raw.overexposed_pct],
+      ["Underexposed %", raw.underexposed_pct],
+      ["Glare %", raw.glare_pct],
+      ["Glare blob %", raw.glare_blob_pct],
+      ["Blur variance", raw.blur_var],
+      ["Document short side px", raw.doc_short_side_px]
+    ];
+    const rawList = document.getElementById("raw-list");
+    rawList.innerHTML = "";
+    for (const row of rawRows) {
+      const item = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = row[0];
+      const value = document.createElement("strong");
+      value.textContent = row[1] === undefined ? "\u2014" : row[1];
+      item.appendChild(label);
+      item.appendChild(value);
+      rawList.appendChild(item);
+    }
+
+    const warningsList = document.getElementById("warnings-list");
+    warningsList.innerHTML = "";
+    const warnings = status.warnings || [];
+    if (!warnings.length) {
+      const item = document.createElement("li");
+      item.textContent = "none";
+      item.style.color = "var(--muted)";
+      warningsList.appendChild(item);
+    } else {
+      for (const warning of warnings) {
+        const item = document.createElement("li");
+        item.textContent = warning;
+        warningsList.appendChild(item);
+      }
+    }
+
+    if (!slidersInitialized && status.thresholds) {
+      for (const dim of DIMS) {
+        const slider = document.querySelector('input[type="range"][data-dim="' + dim + '"]');
+        slider.value = status.thresholds[dim];
+        slider.nextElementSibling.textContent = status.thresholds[dim];
+      }
+      slidersInitialized = true;
+    }
+  }
+
+  async function pollStatus() {
+    try {
+      const response = await fetch("/status", { cache: "no-store" });
+      render(await response.json());
+    } catch (error) {
+      document.getElementById("chip-detection").textContent = "disconnected";
+    }
+  }
+
+  for (const slider of document.querySelectorAll('input[type="range"]')) {
+    slider.addEventListener("input", () => {
+      slider.nextElementSibling.textContent = slider.value;
+    });
+    slider.addEventListener("change", async () => {
+      const payload = {};
+      for (const dim of DIMS) {
+        payload[dim] = Number(document.querySelector('input[type="range"][data-dim="' + dim + '"]').value);
+      }
+      try {
+        const response = await fetch("/thresholds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        document.getElementById("chip-revision").textContent = "rev " + result.revision;
+        toast(result.changed ? "Thresholds saved (rev " + result.revision + ")" : "No change");
+      } catch (error) {
+        toast("Could not save thresholds");
+      }
+    });
+  }
+
+  document.getElementById("capture").addEventListener("click", async () => {
+    try {
+      const response = await fetch("/snapshot", { method: "POST" });
+      const result = await response.json();
+      toast(result.error ? "Capture failed: " + result.error : "Saved " + result.image);
+    } catch (error) {
+      toast("Capture failed");
+    }
+  });
+
+  setInterval(pollStatus, 200);
+  pollStatus();
+</script>
+</body>
+</html>

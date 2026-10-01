@@ -107,6 +107,114 @@ Philippine-specific and does need dedicated data:
 
 ---
 
+### 0.5 Implementation status — prototype run (as of 2026-09-27)
+
+This section records what actually exists after the current prototype run. It is an
+addendum: the rest of this document remains the target design.
+
+**Where the code lives (current reality).**
+
+```
+EDA/
+  training/            # pipeline: data_common.py, preprocess_midv500.py, degradations.py,
+                       # build_dataset.py, eda_plots.py, train_models.py, make_plot_docs.py,
+                       # run_pipeline.py, score_images.py, config.yaml, requirements.txt
+  inference/           # score_image.py (standalone tester), inference_config.json
+  models/              # joblib classifiers/regressors, thresholds.json, model_report.json
+  data/midv500/processed/   # raw_metrics.parquet, features.parquet, feature_spec.json,
+                            # splits.json, feature_ranking.json, validation.json,
+                            # reconciliation_*.json, DOCUMENT_TYPE_MAPPING.md
+  training/plots/      # 22 plots + per-folder READMEs + manifest.json
+```
+
+The layout in Section 2 (project root with `ocr-image-quality-detector.js`,
+`demo.html`, `training/` at root) does **not exist yet**. `ocr-image-quality-detector.js`
+is still to be created; the Python metric definitions in `data_common.py` are the
+canonical spec it must mirror.
+
+**Environment.** uv-managed Python 3.12 venv; dependencies: opencv-python, numpy,
+pandas, pyarrow, scikit-learn, scipy, matplotlib, seaborn, pyyaml, tqdm, joblib.
+(torch/onnx not yet added; not required for the current tree-ensemble prototype.)
+
+**Data status.**
+- MIDV-500: 49 document-type folders on disk; 33 are ID/passport and were ingested,
+  16 are drvlic/other and are excluded by config. 14,749 TIFFs total; 3 leftover
+  zips from an interrupted download; MIDV-2019 **not downloaded**.
+- TIFFs are PackBits-compressed with YCbCr photometric: OpenCV/Pillow decode them
+  correctly; Windows Photos reports them as "corrupted" (viewer limitation, not
+  corruption).
+- `data/midv500/processed/DOCUMENT_TYPE_MAPPING.md` exists as an auto-generated
+  draft; the Phase 1 human-review gate is still open.
+
+**Pipeline stages and commands.**
+
+```console
+cd "C:/Users/My PC/Downloads/midv500/EDA"
+uv run python training/run_pipeline.py --stage all --limit-folders 34 --workers 8 --force
+# stages: metrics -> build -> plots -> train -> docs
+uv run python inference/score_image.py    # scores images in inference/test_images/
+```
+
+**Dataset produced.**
+- 1,980 frames ingested (every 5th frame, all 33 ID/passport folders) -> 1,228 kept
+  after cleaning -> 521 source-gated base crops -> 6,252 rows
+  (train 4,356 / val 696 / test 1,200).
+- Test split is leave-7-document-types-out (generalization). `validation.json`
+  passes: no param/quad leakage into features, disjoint groups, label consistency.
+- 31 model features after correlation pruning; `feature_spec.json` is the single
+  source for the feature list, resolution rule and label definition.
+
+**Labels (prototype, provisional).**
+- blur: sigma <= 2.5 px and motion length <= 15 px.
+- brightness: exposure-adequacy = gamma in [0.85, 1.2] AND |EV| <= 1.0
+  (`review_required: true` — human sign-off still pending).
+- glare: radius fraction <= 0.08.
+- resolution: deterministic domain rule, warped-document short side >= 500 px
+  (NOT learned from data).
+
+**Models** (HistGradientBoosting; thresholds auto-selected from validation PR curves
+for per-class recall targets, with max-F1 fallback).
+
+| Head | Val F1 | Val AUC | Test F1 | Test AUC | Threshold (probability) | Friendly (0-100) |
+|---|---|---|---|---|---|---|
+| readable_overall (learned: blur AND brightness AND glare) | 0.737 | 0.952 | 0.684 | 0.939 | 0.386 | — |
+| readable_blur | 0.882 | 0.951 | 0.825 | 0.938 | 0.547 | 55 |
+| readable_brightness | 0.796 | 0.837 | 0.720 | 0.791 | 0.370 | 35 |
+| readable_glare | 0.893 | 0.960 | 0.868 | 0.948 | 0.341 | 35 |
+| reg blur_severity (R2) | 0.706 | — | 0.641 | — | — | — |
+| reg brightness_severity (R2) | 0.614 | — | 0.571 | — | — | — |
+| reg glare_severity (R2) | 0.697 | — | 0.656 | — | — | — |
+| reg severity_index (R2) | 0.741 | — | 0.734 | — | — | — |
+| resolution rule (deterministic) | F1 1.000 | — | F1 1.000 | — | 500 px | 50 |
+
+Combined production decision (joint overall AND resolution rule) evaluated against
+the 4-dimension label: **val F1 0.837 (recall 0.911, precision 0.774); test F1 0.818
+(recall 0.873, precision 0.769)**. Rounding learned thresholds x100 to friendly
+values changes at most 21/1,200 test verdicts.
+
+**Inference tester.** `inference/score_image.py` returns, per image, a `score`
+(0-100, higher is better) and `is_pass` per dimension on the same scale:
+`blur`/`brightness`/`glare` = 100 x P(readable), `resolution` = 100 x
+min(short_side_px / 1000, 1). Pass = score >= threshold; thresholds are editable in
+`inference/inference_config.json`. Feature parity between training and inference was
+verified exactly (5/5 samples, all 31 features, tolerance 1e-6).
+
+**Deviations from the plan.**
+- MIDV-500 was used to prototype the Phase 5 quality work, contrary to Section 0.3's
+  "not used for the quality classifier" scope. The human explicitly approved this as
+  a prototype; Philippine-specific training remains the production goal.
+- Document type is a runtime parameter (id_card / passport) in the prototype; the
+  Phase 3 learned type classifier does not exist yet.
+- Corner detection uses the classical `detect_document_quad` only; Phase 4 has not
+  started. See Section 11 for the measured detection failure rate.
+
+**Engineering checks completed.** `engineer_features` is shared by training and
+inference (`data_common.py`) and the extract refactor was verified bit-identical;
+provably dead code was removed; `resolution_readable` is wired as the single
+canonical resolution rule.
+
+---
+
 ## 1. Definition of done
 
 Ranked by how much each matters to the stated goal (Section 0.1):
@@ -185,9 +293,20 @@ project-root/
     MODEL_CARD.md
 ```
 
+**Layout reconciliation (as of the prototype run):** the actual layout is
+`EDA/training/` (pipeline modules), `EDA/inference/` (standalone tester),
+`EDA/models/`, `EDA/data/midv500/processed/` and `EDA/training/plots/`. The
+`ocr-image-quality-detector.js`, `demo.html`, `data/synthetic/` and
+`data/real_holdout/` items above are the target layout for Phases 4-6, not the
+current state — see Section 0.5.
+
 ---
 
 ## 3. Environment setup
+
+**Status (2026-09-27): DONE** — uv project, Python 3.12, dependencies installed
+(see Section 0.5). `ocr-image-quality-detector.js` does not exist yet, so the
+"confirm it runs as-is" step is not applicable.
 
 1. Create `training/requirements.txt` with, at minimum: `opencv-python`,
    `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `torch`,
@@ -210,6 +329,11 @@ classifier does not require Phase 4 to be complete — it only requires
 ---
 
 ## 4. Phase 1 — Data acquisition
+
+**Status (2026-09-27): PARTIAL** — MIDV-500 downloaded and preprocessed
+(`training/preprocess_midv500.py`, see Section 0.5); 4.2 synthetic Philippine data
+not started; 4.3 real holdout unavailable; `DOCUMENT_TYPE_MAPPING.md` draft awaits
+human review.
 
 ### 4.1 MIDV-500 download and preprocessing
 
@@ -312,6 +436,10 @@ it's available, and treat any pre-holdout results as provisional.
 
 ## 5. Phase 2 — Exploratory data analysis
 
+**Status (2026-09-27): PARTIAL** — EDA plot flow and per-folder docs generated
+(`training/plots/`, 22 plots + READMEs); `EDA_FINDINGS.md` not written; 5.3
+quality-threshold EDA was run on the MIDV-500 prototype, not on Philippine data.
+
 Complete before any training. Findings here set hyperparameters and
 priorities for Phases 3–5 — do not skip ahead and guess.
 
@@ -389,6 +517,9 @@ same as the prior plan — this is a judgment call about what counts as
 
 ## 6. Phase 3 — Document type classifier (ID vs. passport)
 
+**Status (2026-09-27): NOT STARTED** — document type is a runtime parameter
+(`--document-type id_card|passport`) in the prototype.
+
 **Role:** supporting infrastructure for Phase 5 (correct physical-size
 selection) and Phase 6 (automatic `documentType` detection instead of
 requiring it as a manual parameter).
@@ -422,6 +553,11 @@ requiring it as a manual parameter).
 ---
 
 ## 7. Phase 4 — Corner/boundary detector
+
+**Status (2026-09-27): NOT STARTED** — classical detection baseline measured:
+6/30 frames reached IoU >= 0.5 against ground-truth quads; an Otsu+minAreaRect
+fallback reaches 13/30. Detector reliability is now the critical path for the
+production scorer (Section 11).
 
 Follow the same architecture, training, and evaluation approach as the
 prior plan's Track B (MobileNetV3-small + 8-value corner regression head,
@@ -464,6 +600,10 @@ proceeds independently).
 ---
 
 ## 8. Phase 5 — Quality (readability) classifier — THE PRIMARY DELIVERABLE
+
+**Status (2026-09-27): PROTOTYPE DONE on MIDV-500** (deviation from Section 0.3,
+human-approved); Philippine-specific training and real-holdout evaluation pending;
+brightness exposure-adequacy label review pending. Current metrics in Section 0.5.
 
 This is what the project is actually for. Treat its evaluation rigor
 accordingly — do not let it inherit a rushed pace from earlier phases.
@@ -514,6 +654,10 @@ accordingly — do not let it inherit a rushed pace from earlier phases.
 
 ## 9. Phase 6 — Integration into the JS pipeline
 
+**Status (2026-09-27): NOT STARTED** — `ocr-image-quality-detector.js` does not
+exist yet; `data/midv500/processed/feature_spec.json` is the intended single source
+for the TypeScript port (feature list, thresholds, resolution rule).
+
 Only integrate a given model if its phase's acceptance criteria passed.
 All integrations remain additive and opt-in, defaulting to the existing
 classical behavior, exactly as in the prior plan.
@@ -549,6 +693,10 @@ classical behavior, exactly as in the prior plan.
 
 ## 10. Phase 7 — Final reporting
 
+**Status (2026-09-27): PARTIAL** — `models/model_report.json` and the
+`training/plots/` documentation exist; `training/RESULTS.md` not written and no
+human review has been performed.
+
 Write/finalize `training/RESULTS.md` summarizing, in this order of
 emphasis (matching Section 0.1's priority):
 
@@ -577,3 +725,131 @@ the human.** This document guides execution; it does not substitute for the
 human's final judgment on whether to ship any of these models to
 production, particularly the quality classifier given its direct role in
 accepting or rejecting real users' document scans.
+
+---
+
+## 11. Known issues and next actions (from the prototype run)
+
+These are evidence-backed findings from the current implementation. Treat them as
+the working backlog; P0 items block trustworthy per-image verdicts.
+
+### P0 — verdict correctness (blocking)
+
+1. **Document detection is unreliable.** On 30 random real MIDV-500 frames, the
+   classical `detect_document_quad` failed on 77% of images, and only 6/30 reached
+   IoU >= 0.5 against the ground-truth quads (median IoU 0.000). Because the scorer
+   falls back to the full image when detection fails:
+   - brightness/glare are computed over the background as well;
+   - resolution becomes trivially 100/pass (full-frame short side ~1080 px),
+     even when the document is small;
+   - both real-image "PASS" results obtained so far came from this fallback path.
+   A cheap improvement was measured: Otsu threshold + largest contour +
+   `minAreaRect` reaches 13/30 success (median IoU 0.479). Still not production
+   grade — this is exactly the case Phase 4's learned corner regressor exists
+   for. Immediate mitigations: improve the fallback, add an IoU validation
+   harness, and stop emitting confident verdicts when detection fails.
+
+2. **No "unknown" state.** When detection fails, the tester should mark
+   brightness/glare/resolution as unknown (`is_pass: null`) plus a warning instead
+   of returning PASS/FAIL from a full-frame measurement.
+
+3. **Degenerate crops are still model-scored.** Black/blank frames (e.g.
+   `brightness_L = 0`) receive a blur score around 70 (pass) because the training
+   set contained no degenerate crops. A deterministic pre-model sanity guard is
+   needed (fail/unknown + warning). The `fft_hf_ratio = 1.0` artifact for constant
+   images was already fixed (`fft_hf_ratio = 0.0`).
+
+4. **Threshold truth is spread across three files.** `models/thresholds.json`
+   (probabilities), `inference/inference_config.json` (friendly 0-100) and
+   `feature_spec.json.resolution_rule` (500 px). The tester ignores the spec rule
+   and uses `resolution_reference_px`. Derive defaults from the spec and warn on
+   drift (e.g. resolution threshold := 100 x rule_px / reference_px).
+
+### P1 — model quality
+
+5. **Blur head weakness.** A synthetic image blurred with sigma 9 (`blur_var` 2.44)
+   scored 81 -> pass. Permutation importance shows the blur head leans on
+   `tenengrad` (0.061), `fft_hf_ratio` (0.056) and `blur_scale_ratio` (0.048);
+   `blur_var` contributes only 0.008. Motion/directional blur is largely missed.
+   Add directional features (gradient anisotropy, FFT angular energy, cepstral
+   peak) and re-evaluate on low-`blur_var` real frames.
+
+6. **Glare/exposure entanglement.** The glare classifier's top feature is
+   `overexposed_pct` (importance 0.354), and glare features correlate ~0.81 with
+   the synthetic exposure (EV) parameter. Positive EV creates false glare;
+   negative EV suppresses real glare. Fix the glare measurement (white top-hat /
+   local-contrast highlights, blob circularity, boundary gradient ring) and
+   stratify glare x exposure sampling, then retrain.
+
+7. **Dead features still in the model input.** `doc_width_px`, `doc_height_px`,
+   `aspect_ratio`, `aspect_deviation`, `est_dpi`, `capture_condition_code`,
+   `doc_type_id_card`, `brightness_q_ratio` all have max |permutation importance|
+   < 0.002 across the five heads. They add detector-dependent variance at inference
+   and enlarge the TypeScript port. Prune them (keep geometry as metadata and as
+   rule inputs) and retrain.
+
+### P2 — robustness and evaluation
+
+8. Calibrate scores (isotonic/Platt on validation) or rename the displayed
+   `score` to "model confidence"; it is currently an uncalibrated probability x100.
+9. Consider adopting the validated composite (joint overall AND resolution rule)
+   for `overall_pass` instead of the tester's AND of rounded per-dimension
+   thresholds: measured test F1 0.818/recall 0.873 vs 0.784/0.905 for heads-AND.
+10. Evaluate and optionally fine-tune on the 13 MIDV-500 driving-licence folders
+    already on disk (driver licences are an unseen design; the current models were
+    trained on ID cards and passports only).
+11. Add unit tests (score mapping, threshold overrides, degenerate guard) and a
+    detection IoU regression harness; the synthetic blurred case should become a
+    regression test.
+12. Decide the resolution score basis: fixed pixel reference (current, 1000 px) vs
+    type-specific reference vs estimated-DPI threshold.
+
+---
+
+## 12. Housekeeping and open human decisions
+
+- **Stale artifacts:** `models/clf_readable_resolution.joblib` and
+  `models/reg_resolution_severity.joblib` are from before resolution became
+  deterministic and should be deleted.
+- **Unmanaged paths:** `EDA/training/plot_list/plots_1|plots_2` (user-created) and
+  an empty `EDA/README.md`; decide whether to keep, document or remove.
+- **Download leftovers:** `03_aut_id_old.zip`, `13_deu_drvlic_old.zip`,
+  `35_nor_drvlic.zip`; MIDV-2019 has not been downloaded.
+- **Human decisions carried forward (still unresolved):**
+  1. MIDV-500 license/usage-terms confirmation (Section 0.3) — not recorded.
+  2. Approval of the brightness exposure-adequacy label definition
+     (`review_required: true`).
+  3. Acknowledgment that the resolution threshold (500 px) is a domain rule, not
+     learned from data.
+  4. There is still no real Philippine holdout set; all reported metrics are
+     synthetic-proxy metrics.
+
+---
+
+## 13. Reproduce commands (current prototype)
+
+```console
+cd "C:/Users/My PC/Downloads/midv500/EDA"
+
+# full pipeline: metrics -> build -> plots -> train -> docs
+uv run python training/run_pipeline.py --stage all --limit-folders 34 --workers 8 --force
+
+# individual stages
+uv run python training/run_pipeline.py --stage metrics --every-n 5 --workers 8
+uv run python training/run_pipeline.py --stage build --max-variants 12 --workers 8
+uv run python training/run_pipeline.py --stage plots
+uv run python training/run_pipeline.py --stage train --force
+uv run python training/run_pipeline.py --stage docs
+
+# score an image placed in the test folder (JSON output)
+uv run python inference/score_image.py
+uv run python inference/score_image.py --input-folder "C:/path/to/images" --document-type id_card
+
+# ad-hoc scoring of arbitrary images with the classical thresholds (no model)
+uv run python training/score_images.py --input-folder "C:/path/to/images" --detect-document
+```
+
+Key outputs: `data/midv500/processed/feature_spec.json`,
+`data/midv500/processed/validation.json`, `models/model_report.json`,
+`models/thresholds.json`, `training/plots/README.md`,
+`inference/results.json`.

@@ -1,0 +1,10 @@
+{
+  "thresholds": {
+    "blur": 49.0,
+    "brightness": 35.0,
+    "glare": 35.0,
+    "resolution": 50.0
+  },
+  "resolution_reference_px": 1000.0,
+  "revision": 1
+}
